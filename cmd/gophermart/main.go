@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/IgorPestretsov/LoyaltySystem/internal/handlers"
 	"github.com/IgorPestretsov/LoyaltySystem/internal/middlewares"
 	"github.com/IgorPestretsov/LoyaltySystem/internal/sqlStorage"
@@ -9,6 +10,7 @@ import (
 	"github.com/caarlos0/env/v6"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/jwtauth/v5"
 	"log"
 	"net/http"
 )
@@ -17,31 +19,52 @@ type Config struct {
 	RunAddress           string `env:"RUN_ADDRESS" envDefault:"localhost:8080"`
 	DatabaseURI          string `env:"DATABASE_URI" envDefault:"password=P@ssw0rd dbname=loyaltySystem sslmode=disable host=localhost port=5432 user=user "`
 	AccrualSystemAddress string `env:"ACCRUAL_SYSTEM_ADDRESS" envDefault:"http://localhost:8080"`
+	TokenSecret          string `env:"TOKEN_SECRET" envDefault:"SuperSecret"`
 }
 
+var cfg Config
+var s storage.Storage
+var tokenAuth *jwtauth.JWTAuth
+
 func main() {
-	var cfg Config
-	var s storage.Storage
 	parseFlags(&cfg)
 
 	err := env.Parse(&cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
+	tokenAuth = jwtauth.New("HS256", []byte(cfg.TokenSecret), nil)
 	s = sqlStorage.NewSQLStorage(cfg.DatabaseURI)
-
-	r := chi.NewRouter()
-	r.Use(middleware.Compress(5))
-	r.Use(middlewares.Decompress)
-
-	r.Post("/api/user/register", func(rw http.ResponseWriter, r *http.Request) {
-		handlers.RegisterUser(rw, r, s)
-	})
-	log.Fatal(http.ListenAndServe(cfg.RunAddress, r))
+	log.Fatal(http.ListenAndServe(cfg.RunAddress, router()))
 }
 
 func parseFlags(config *Config) {
 	flag.StringVar(&config.RunAddress, "a", config.RunAddress, "IP address and port on which service will run")
 	flag.StringVar(&config.DatabaseURI, "d", config.DatabaseURI, "Service database URI")
 	flag.StringVar(&config.AccrualSystemAddress, "r", config.AccrualSystemAddress, "Accrual system connection address")
+	flag.StringVar(&config.TokenSecret, "s", config.TokenSecret, "Secret for hashing tokens")
+}
+func router() http.Handler {
+	r := chi.NewRouter()
+	//Protected group
+	r.Group(func(r chi.Router) {
+		r.Use(jwtauth.Verifier(tokenAuth))
+		r.Use(jwtauth.Authenticator)
+		r.Use(middleware.Compress(5))
+		r.Use(middlewares.Decompress)
+		r.Get("/test", func(w http.ResponseWriter, r *http.Request) {
+			_, claims, _ := jwtauth.FromContext(r.Context())
+			w.Write([]byte(fmt.Sprintf("protected area. hi %v", claims["user_id"])))
+		})
+	})
+	//Unprotected group
+	r.Group(func(r chi.Router) {
+		r.Post("/api/user/register", func(rw http.ResponseWriter, r *http.Request) {
+			handlers.RegisterUser(rw, r, s)
+		})
+		r.Post("/api/user/login", func(rw http.ResponseWriter, r *http.Request) {
+			handlers.Login(rw, r, s, tokenAuth)
+		})
+	})
+	return r
 }

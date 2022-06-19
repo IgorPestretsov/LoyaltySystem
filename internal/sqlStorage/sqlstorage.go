@@ -56,3 +56,8 @@ func (s *SQLStorage) DropTableUsers() {
 	_, _ = s.db.Exec("drop table users;")
 
 }
+func (s *SQLStorage) GetUserPassword(user storage.User) (string, error) {
+	var actualPasswordHash string
+	_ = s.db.QueryRow("select password from users where login=$1", user.Login).Scan(&actualPasswordHash)
+	return actualPasswordHash, nil
+}
