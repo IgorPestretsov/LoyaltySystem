@@ -52,6 +52,7 @@ func router() http.Handler {
 		r.Use(jwtauth.Authenticator)
 		r.Use(middleware.Compress(5))
 		r.Use(middlewares.Decompress)
+
 		r.Get("/test", func(w http.ResponseWriter, r *http.Request) {
 			_, claims, _ := jwtauth.FromContext(r.Context())
 			w.Write([]byte(fmt.Sprintf("protected area. hi %v", claims["user_id"])))
@@ -61,6 +62,9 @@ func router() http.Handler {
 	r.Group(func(r chi.Router) {
 		r.Post("/api/user/register", func(rw http.ResponseWriter, r *http.Request) {
 			handlers.RegisterUser(rw, r, s)
+		})
+		r.Post("/api/user/orders", func(rw http.ResponseWriter, r *http.Request) {
+			handlers.SaveOrder(rw, r, s)
 		})
 		r.Post("/api/user/login", func(rw http.ResponseWriter, r *http.Request) {
 			handlers.Login(rw, r, s, tokenAuth)

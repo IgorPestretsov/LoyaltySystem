@@ -3,6 +3,7 @@ package sqlStorage
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/IgorPestretsov/LoyaltySystem/internal/app"
 	"github.com/IgorPestretsov/LoyaltySystem/internal/storage"
 	"github.com/jackc/pgerrcode"
@@ -40,8 +41,8 @@ func (s *SQLStorage) createTables() error {
 	}
 
 	_, err = s.db.Query("CREATE TABLE IF NOT EXISTS orders (" +
-		"order_num SERIAL PRIMARY KEY," +
-		"uid VARCHAR(30) UNIQUE)" +
+		"order_num BIGSERIAL PRIMARY KEY," +
+		"uid VARCHAR(30))" +
 		";")
 	if err != nil {
 		panic(err)
@@ -55,7 +56,8 @@ func (s *SQLStorage) SaveUser(user storage.User) error {
 	_, err = s.db.Exec("insert into users(login,password) values ($1,$2);",
 		user.Login, hashedPass)
 	if errors.As(err, &pqErr) && pqErr.Code == pgerrcode.UniqueViolation {
-		return storage.ErrLoginExist
+		var errLoginExist *storage.ErrLoginExist
+		return errLoginExist
 	}
 	return err
 
@@ -74,16 +76,23 @@ func (s *SQLStorage) SaveOrder(user string, order_num string) error {
 	uid, _ := s.getUIDbyUserLogin(user)
 	_, err := s.db.Exec("insert into orders(order_num, uid) values ($1,$2);",
 		order_num, uid)
+	fmt.Println(err)
 	if errors.As(err, &pqErr) && pqErr.Code == pgerrcode.UniqueViolation {
 		uidThatLoaded, _ := s.getUIDbyOrderNum(order_num)
 		if uidThatLoaded == uid {
-			return storage.ErrAlreadyLoadedByThisUser
+			var errAlreadyLoadedByThisUser *storage.ErrAlreadyLoadedByThisUser
+			return errAlreadyLoadedByThisUser
 		} else {
-			return storage.ErrAlreadyLoadedByDifferentUser
+			var errAlreadyLoadedByDifferentUser *storage.ErrAlreadyLoadedByDifferentUser
+			return errAlreadyLoadedByDifferentUser
 		}
 	}
+	if errors.As(err, &pqErr) && pqErr.Code == pgerrcode.InvalidTextRepresentation {
+		fmt.Println("here:", pqErr.Code)
+	}
 	if err != nil {
-		return storage.ErrDBInteraction
+		var errDBInteraction *storage.ErrDBInteraction
+		return errDBInteraction
 	}
 	return nil
 

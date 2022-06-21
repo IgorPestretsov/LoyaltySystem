@@ -1,8 +1,25 @@
 package storage
 
-import "errors"
+type ErrLoginExist struct {
+}
 
-var ErrLoginExist = errors.New("login already exist")
-var ErrAlreadyLoadedByThisUser = errors.New("order has been loaded already by this user")
-var ErrAlreadyLoadedByDifferentUser = errors.New("order has been loaded already by different user")
-var ErrDBInteraction = errors.New("database interaction error")
+func (e *ErrLoginExist) Error() string { return "login already exist" }
+
+type ErrAlreadyLoadedByThisUser struct {
+}
+
+func (e *ErrAlreadyLoadedByThisUser) Error() string {
+	return "order has been loaded already by this user"
+}
+
+type ErrAlreadyLoadedByDifferentUser struct {
+}
+
+func (e *ErrAlreadyLoadedByDifferentUser) Error() string {
+	return "order has been loaded already by different user"
+}
+
+type ErrDBInteraction struct {
+}
+
+func (e *ErrDBInteraction) Error() string { return "database interaction error" }

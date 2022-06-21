@@ -21,7 +21,8 @@ func RegisterUser(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 		return
 	}
 	err = s.SaveUser(user)
-	if errors.Is(err, storage.ErrNotFound) {
+	var errLogin *storage.ErrLoginExist
+	if errors.As(err, &errLogin) {
 		w.WriteHeader(http.StatusConflict)
 
 	}
@@ -61,4 +62,33 @@ func Login(w http.ResponseWriter, r *http.Request, s storage.Storage, tokenAuth 
 		return
 	}
 
+}
+func SaveOrder(w http.ResponseWriter, r *http.Request, s storage.Storage) {
+	_, claims, _ := jwtauth.FromContext(r.Context())
+	userName := fmt.Sprintf("%v", claims["user_login"])
+	rawData, err := io.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Println(err)
+		return
+	}
+	order_num := string(rawData)
+	fmt.Println(order_num)
+	fmt.Println(userName)
+	err = s.SaveOrder(userName, order_num)
+	switch err.(type) {
+	default:
+		w.WriteHeader(http.StatusAccepted)
+	case *storage.ErrAlreadyLoadedByThisUser:
+		w.WriteHeader(http.StatusOK)
+		return
+
+	case *storage.ErrAlreadyLoadedByDifferentUser:
+		w.WriteHeader(http.StatusConflict)
+		return
+	case *storage.ErrDBInteraction:
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+		//TODO поменять на case, еще 422 вставить
+	}
 }
