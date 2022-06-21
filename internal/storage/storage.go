@@ -6,4 +6,6 @@ type User struct {
 }
 type Storage interface {
 	SaveUser(user User) error
+	GetUserPassword(user User) (string, error)
+	SaveOrder(user string, order_num string) error
 }
