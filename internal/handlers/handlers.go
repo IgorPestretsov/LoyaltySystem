@@ -11,7 +11,7 @@ import (
 	"net/http"
 )
 
-func RegisterUser(w http.ResponseWriter, r *http.Request, s storage.Storage) {
+func RegisterUser(w http.ResponseWriter, r *http.Request, s storage.Storage, tokenAuth *jwtauth.JWTAuth) {
 	user := storage.User{}
 	rawData, err := io.ReadAll(r.Body)
 	err = json.Unmarshal(rawData, &user)
@@ -20,6 +20,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 		fmt.Println(err)
 		return
 	}
+	fmt.Println(user)
 	err = s.SaveUser(user)
 	var errLogin *storage.ErrLoginExist
 	if errors.As(err, &errLogin) {
@@ -31,6 +32,9 @@ func RegisterUser(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	tokenString := app.GetToken(user.Login, tokenAuth)
+	cookie := http.Cookie{Name: "jwt", Value: tokenString}
+	http.SetCookie(w, &cookie)
 	w.WriteHeader(http.StatusOK)
 	return
 
@@ -39,6 +43,7 @@ func Login(w http.ResponseWriter, r *http.Request, s storage.Storage, tokenAuth 
 
 	user := storage.User{}
 	rawData, err := io.ReadAll(r.Body)
+	fmt.Println("user in login:", rawData)
 	err = json.Unmarshal(rawData, &user)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -51,7 +56,7 @@ func Login(w http.ResponseWriter, r *http.Request, s storage.Storage, tokenAuth 
 	passIsOk := app.CheckPasswordHash(user.Password, actualPasswordHash)
 	if passIsOk {
 		fmt.Println("pass is ok")
-		_, tokenString, _ := tokenAuth.Encode(map[string]interface{}{"user_login": user.Login})
+		tokenString := app.GetToken(user.Login, tokenAuth)
 		cookie := http.Cookie{Name: "jwt", Value: tokenString}
 		http.SetCookie(w, &cookie)
 		w.WriteHeader(http.StatusOK)

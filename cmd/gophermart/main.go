@@ -61,7 +61,7 @@ func router() http.Handler {
 	//Unprotected group
 	r.Group(func(r chi.Router) {
 		r.Post("/api/user/register", func(rw http.ResponseWriter, r *http.Request) {
-			handlers.RegisterUser(rw, r, s)
+			handlers.RegisterUser(rw, r, s, tokenAuth)
 		})
 		r.Post("/api/user/orders", func(rw http.ResponseWriter, r *http.Request) {
 			handlers.SaveOrder(rw, r, s)
