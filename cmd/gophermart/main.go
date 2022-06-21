@@ -16,7 +16,7 @@ import (
 )
 
 type Config struct {
-	RunAddress           string `env:"RUN_ADDRESS" envDefault:"localhost:8080"`
+	RunAddress           string `env:"RUN_ADDRESS" envDefault:"localhost:8081"`
 	DatabaseURI          string `env:"DATABASE_URI" envDefault:"password=P@ssw0rd dbname=loyaltySystem sslmode=disable host=localhost port=5432 user=user "`
 	AccrualSystemAddress string `env:"ACCRUAL_SYSTEM_ADDRESS" envDefault:"http://localhost:8080"`
 	TokenSecret          string `env:"TOKEN_SECRET" envDefault:"SuperSecret"`
