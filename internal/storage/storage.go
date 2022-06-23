@@ -5,9 +5,9 @@ type User struct {
 	Password string `json:"password"`
 }
 type Order struct {
-	Number     string `json:"number"`
+	Number     uint64 `json:"number"`
 	Status     string `json:"status"`
-	Accrual    string `json:"accrual"`
+	Accrual    uint32 `json:"accrual"`
 	UploadedAt string `json:"uploaded_at"`
 }
 type Storage interface {
