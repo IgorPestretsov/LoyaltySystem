@@ -42,8 +42,8 @@ func (s *SQLStorage) createTables() error {
 
 	_, err = s.db.Query("CREATE TABLE IF NOT EXISTS orders (" +
 		"order_num BIGSERIAL PRIMARY KEY," +
-		"status VARCHAR(30)," +
-		"accrual VARCHAR(30)," +
+		"status VARCHAR(30) DEFAULT 'NEW'," +
+		"accrual INTEGER DEFAULT 0," +
 		"uploaded_at timestamp with time zone NOT NULL DEFAULT NOW()," +
 		"uid VARCHAR(30))" +
 		";")
@@ -92,6 +92,8 @@ func (s *SQLStorage) SaveOrder(user string, order_num string) error {
 	}
 	if errors.As(err, &pqErr) && pqErr.Code == pgerrcode.InvalidTextRepresentation {
 		fmt.Println("here:", pqErr.Code)
+		var errFormat *storage.ErrFormat
+		return errFormat
 	}
 	if err != nil {
 		var errDBInteraction *storage.ErrDBInteraction
@@ -111,4 +113,30 @@ func (s *SQLStorage) getUIDbyOrderNum(orderNum string) (string, error) {
 	var uid string
 	err := s.db.QueryRow("select uid from orders where order_num=$1;", orderNum).Scan(&uid)
 	return uid, err
+}
+
+func (s *SQLStorage) GetUserOrders(user_login string) ([]storage.Order, error) {
+	uid, _ := s.getUIDbyUserLogin(user_login)
+	q := "select order_num, status, accrual, uploaded_at  from orders where uid=$1"
+	rows, err := s.db.Query(q, uid)
+	fmt.Println(err)
+	if err != nil {
+		panic(err)
+	}
+	//err := rows.Err()
+
+	//if err != nil {
+	//	var errDBInteraction *storage.ErrDBInteraction
+	//	return nil, errDBInteraction
+	//}
+	var orders []storage.Order
+	for rows.Next() {
+		var order storage.Order
+		err := rows.Scan(&order.Number, &order.Status, &order.Accrual, &order.UploadedAt)
+		if err != nil {
+			panic(err)
+		}
+		orders = append(orders, order)
+	}
+	return orders, nil
 }

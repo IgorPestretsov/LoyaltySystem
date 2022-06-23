@@ -23,3 +23,8 @@ type ErrDBInteraction struct {
 }
 
 func (e *ErrDBInteraction) Error() string { return "database interaction error" }
+
+type ErrFormat struct {
+}
+
+func (e *ErrFormat) Error() string { return "wrong value format" }

@@ -52,6 +52,12 @@ func router() http.Handler {
 		r.Use(jwtauth.Authenticator)
 		r.Use(middleware.Compress(5))
 		r.Use(middlewares.Decompress)
+		r.Post("/api/user/orders", func(rw http.ResponseWriter, r *http.Request) {
+			handlers.SaveOrder(rw, r, s)
+		})
+		r.Get("/api/user/orders", func(rw http.ResponseWriter, r *http.Request) {
+			handlers.GetAllUserOrders(rw, r, s)
+		})
 
 		r.Get("/test", func(w http.ResponseWriter, r *http.Request) {
 			_, claims, _ := jwtauth.FromContext(r.Context())
@@ -62,9 +68,6 @@ func router() http.Handler {
 	r.Group(func(r chi.Router) {
 		r.Post("/api/user/register", func(rw http.ResponseWriter, r *http.Request) {
 			handlers.RegisterUser(rw, r, s, tokenAuth)
-		})
-		r.Post("/api/user/orders", func(rw http.ResponseWriter, r *http.Request) {
-			handlers.SaveOrder(rw, r, s)
 		})
 		r.Post("/api/user/login", func(rw http.ResponseWriter, r *http.Request) {
 			handlers.Login(rw, r, s, tokenAuth)

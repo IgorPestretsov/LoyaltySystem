@@ -94,6 +94,26 @@ func SaveOrder(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 	case *storage.ErrDBInteraction:
 		w.WriteHeader(http.StatusInternalServerError)
 		return
-		//TODO поменять на case, еще 422 вставить
+	case *storage.ErrFormat:
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		return
+	}
+}
+func GetAllUserOrders(w http.ResponseWriter, r *http.Request, s storage.Storage) {
+	_, claims, _ := jwtauth.FromContext(r.Context())
+	userName := fmt.Sprintf("%v", claims["user_login"])
+	orders, err := s.GetUserOrders(userName)
+	if orders == nil {
+		w.WriteHeader(http.StatusNoContent)
+	}
+
+	output, err := json.Marshal(orders)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	_, err = w.Write(output)
+	if err != nil {
+		return
 	}
 }
