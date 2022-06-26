@@ -140,3 +140,45 @@ func (s *SQLStorage) GetUserOrders(user_login string) ([]storage.Order, error) {
 	}
 	return orders, nil
 }
+
+func (s *SQLStorage) GetRequiringToBeProcessed() ([]storage.OrderForProcessing, error) {
+	q := "select order_num, status from orders where status = 'NEW'"
+	rows, err := s.db.Query(q)
+	if err != nil {
+		panic(err)
+	}
+	//err := rows.Err()
+
+	//if err != nil {
+	//	var errDBInteraction *storage.ErrDBInteraction
+	//	return nil, errDBInteraction
+	//}
+	var orders []storage.OrderForProcessing
+	for rows.Next() {
+		var order storage.OrderForProcessing
+		err := rows.Scan(&order.Number, &order.Status)
+		if err != nil {
+			panic(err)
+		}
+		orders = append(orders, order)
+	}
+	return orders, nil
+
+}
+func (s *SQLStorage) ChangeStatus(uid string, status string) error {
+	_, err := s.db.Exec("update orders set status=$2 where order_num=$1", uid, status)
+	if err != nil {
+		var errDBInteraction *storage.ErrDBInteraction
+		return errDBInteraction
+	}
+	return nil
+}
+
+func (s *SQLStorage) ChangeStatusAndAcc(uid string, status string, accrual int32) error {
+	_, err := s.db.Exec("update orders set status=$2, accrual=$3 where order_num=$1", uid, status, accrual)
+	if err != nil {
+		var errDBInteraction *storage.ErrDBInteraction
+		return errDBInteraction
+	}
+	return nil
+}

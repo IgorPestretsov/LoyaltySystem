@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/IgorPestretsov/LoyaltySystem/internal/handlers"
 	"github.com/IgorPestretsov/LoyaltySystem/internal/middlewares"
+	"github.com/IgorPestretsov/LoyaltySystem/internal/order_broker"
 	"github.com/IgorPestretsov/LoyaltySystem/internal/sqlStorage"
 	"github.com/IgorPestretsov/LoyaltySystem/internal/storage"
 	"github.com/caarlos0/env/v6"
@@ -35,6 +36,8 @@ func main() {
 	}
 	tokenAuth = jwtauth.New("HS256", []byte(cfg.TokenSecret), nil)
 	s = sqlStorage.NewSQLStorage(cfg.DatabaseURI)
+	b := order_broker.New(s, cfg.AccrualSystemAddress)
+	b.Start()
 	log.Fatal(http.ListenAndServe(cfg.RunAddress, router()))
 }
 
