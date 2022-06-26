@@ -58,13 +58,14 @@ func (b *Broker) GetStatusFromAccrual() {
 		fmt.Println(b.accrualGetRecUrl + r.Number)
 		err := b.getJson(b.accrualGetRecUrl+r.Number, &resp)
 		if err != nil {
-			panic(err)
+			b.queue <- r
+			time.Sleep(time.Second)
+			continue
 		}
 		if (resp.Status != storage.StatusProcessed) && (resp.Status != storage.StatusInvalid) {
 			fmt.Println("Here")
 			b.queue <- r
 			time.Sleep(time.Second)
-			fmt.Println(resp)
 			continue
 		} else {
 			fmt.Println("here2")
