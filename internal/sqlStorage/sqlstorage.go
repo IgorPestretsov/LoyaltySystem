@@ -43,7 +43,7 @@ func (s *SQLStorage) createTables() error {
 	_, err = s.db.Query("CREATE TABLE IF NOT EXISTS orders (" +
 		"order_num BIGSERIAL PRIMARY KEY," +
 		"status VARCHAR(30) DEFAULT 'NEW'," +
-		"accrual INTEGER DEFAULT 0," +
+		"accrual double precision DEFAULT 0," +
 		"uploaded_at timestamp with time zone NOT NULL DEFAULT NOW()," +
 		"uid VARCHAR(30))" +
 		";")
@@ -174,10 +174,11 @@ func (s *SQLStorage) ChangeStatus(uid string, status string) error {
 	return nil
 }
 
-func (s *SQLStorage) ChangeStatusAndAcc(uid string, status string, accrual int32) error {
+func (s *SQLStorage) ChangeStatusAndAcc(uid string, status string, accrual float32) error {
 	_, err := s.db.Exec("update orders set status=$2, accrual=$3 where order_num=$1", uid, status, accrual)
 	if err != nil {
 		var errDBInteraction *storage.ErrDBInteraction
+		fmt.Println(err)
 		return errDBInteraction
 	}
 	return nil

@@ -34,6 +34,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println(cfg)
 	tokenAuth = jwtauth.New("HS256", []byte(cfg.TokenSecret), nil)
 	s = sqlStorage.NewSQLStorage(cfg.DatabaseURI)
 	b := order_broker.New(s, cfg.AccrualSystemAddress)

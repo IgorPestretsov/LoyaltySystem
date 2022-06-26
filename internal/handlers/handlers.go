@@ -7,8 +7,10 @@ import (
 	"github.com/IgorPestretsov/LoyaltySystem/internal/app"
 	"github.com/IgorPestretsov/LoyaltySystem/internal/storage"
 	"github.com/go-chi/jwtauth/v5"
+	"github.com/theplant/luhn"
 	"io"
 	"net/http"
+	"strconv"
 )
 
 func RegisterUser(w http.ResponseWriter, r *http.Request, s storage.Storage, tokenAuth *jwtauth.JWTAuth) {
@@ -78,9 +80,13 @@ func SaveOrder(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 		return
 	}
 	order_num := string(rawData)
-	fmt.Println(order_num)
-	fmt.Println(userName)
+	order_num_int, _ := strconv.Atoi(order_num)
+	if luhn.Valid(order_num_int) == false {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		return
+	}
 	err = s.SaveOrder(userName, order_num)
+
 	switch err.(type) {
 	default:
 		w.WriteHeader(http.StatusAccepted)
@@ -99,11 +105,13 @@ func SaveOrder(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 		return
 	}
 }
+
 func GetAllUserOrders(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 	_, claims, _ := jwtauth.FromContext(r.Context())
 	w.Header().Add("Content-Type", "application/json")
 	userName := fmt.Sprintf("%v", claims["user_login"])
 	orders, err := s.GetUserOrders(userName)
+
 	if orders == nil {
 		w.WriteHeader(http.StatusNoContent)
 	}

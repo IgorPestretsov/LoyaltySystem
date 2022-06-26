@@ -6,10 +6,10 @@ type User struct {
 }
 
 type Order struct {
-	Number     string `json:"number"`
-	Status     string `json:"status"`
-	Accrual    uint32 `json:"accrual"`
-	UploadedAt string `json:"uploaded_at"`
+	Number     string  `json:"number"`
+	Status     string  `json:"status"`
+	Accrual    float64 `json:"accrual"`
+	UploadedAt string  `json:"uploaded_at"`
 }
 
 type OrderForProcessing struct {
@@ -24,7 +24,7 @@ type Storage interface {
 	GetUserOrders(user_login string) ([]Order, error)
 	GetRequiringToBeProcessed() ([]OrderForProcessing, error)
 	ChangeStatus(ui string, status string) error
-	ChangeStatusAndAcc(uid string, status string, accrual int32) error
+	ChangeStatusAndAcc(uid string, status string, accrual float32) error
 }
 
 const StatusProcessing = "PROCESSING"
