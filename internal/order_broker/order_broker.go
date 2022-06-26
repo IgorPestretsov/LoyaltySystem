@@ -59,6 +59,7 @@ func (b *Broker) GetStatusFromAccrual() {
 		err := b.getJson(b.accrualGetRecUrl+r.Number, &resp)
 		if err != nil {
 			b.queue <- r
+			fmt.Println(err)
 			time.Sleep(time.Second)
 			continue
 		}
