@@ -178,6 +178,7 @@ func (s *SQLStorage) ChangeStatusAndAcc(uid string, status string, accrual float
 	_, err := s.db.Exec("update orders set status=$2, accrual=$3 where order_num=$1", uid, status, accrual)
 	if err != nil {
 		var errDBInteraction *storage.ErrDBInteraction
+		fmt.Println(err)
 		return errDBInteraction
 	}
 	return nil
