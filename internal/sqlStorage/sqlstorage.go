@@ -43,7 +43,7 @@ func (s *SQLStorage) createTables() error {
 	_, err = s.db.Query("CREATE TABLE IF NOT EXISTS orders (" +
 		"order_num BIGSERIAL PRIMARY KEY," +
 		"status VARCHAR(30) DEFAULT 'NEW'," +
-		"accrual INTEGER DEFAULT 0," +
+		"accrual double precision DEFAULT 0," +
 		"uploaded_at timestamp with time zone NOT NULL DEFAULT NOW()," +
 		"uid VARCHAR(30))" +
 		";")
