@@ -11,7 +11,7 @@ import (
 type accResponse struct {
 	Order   string `json:"order"`
 	Status  string `json:"status"`
-	Accrual int32  `json:"accrual"`
+	Accrual int32  `json:"accrual,omitempty"`
 }
 type Broker struct {
 	s                storage.Storage
