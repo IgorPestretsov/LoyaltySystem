@@ -56,13 +56,20 @@ func (b *Broker) GetStatusFromAccrual() {
 		resp = accResponse{}
 		fmt.Println("Proccessing ", r)
 		fmt.Println(b.accrualGetRecUrl + r.Number)
-		b.getJson(b.accrualGetRecUrl+r.Number, &resp)
-		b.s.ChangeStatusAndAcc(resp.Order, resp.Status, resp.Accrual)
-		if (resp.Status != storage.StatusProcessed) && (resp.Status != storage.StatusInvalid) {
-			b.queue <- r
-
+		err := b.getJson(b.accrualGetRecUrl+r.Number, &resp)
+		if err != nil {
+			panic(err)
 		}
-		fmt.Println(resp)
+		if (resp.Status != storage.StatusProcessed) && (resp.Status != storage.StatusInvalid) {
+			fmt.Println("Here")
+			b.queue <- r
+			time.Sleep(time.Second)
+			fmt.Println(resp)
+			continue
+		} else {
+			fmt.Println("here2")
+			b.s.ChangeStatusAndAcc(resp.Order, resp.Status, resp.Accrual)
+		}
 
 	}
 }
