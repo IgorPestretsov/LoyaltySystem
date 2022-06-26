@@ -81,6 +81,5 @@ func (b *Broker) getJson(url string, target interface{}) error {
 	}
 	fmt.Println(r.Body)
 	defer r.Body.Close()
-
 	return json.NewDecoder(r.Body).Decode(target)
 }
