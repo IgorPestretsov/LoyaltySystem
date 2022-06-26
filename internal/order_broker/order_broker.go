@@ -51,8 +51,9 @@ func (b *Broker) getNewRecs() {
 }
 
 func (b *Broker) GetStatusFromAccrual() {
+	var resp accResponse
 	for r := range b.queue {
-		resp := accResponse{}
+		resp = accResponse{}
 		fmt.Println("Proccessing ", r)
 		fmt.Println(b.accrualGetRecUrl + r.Number)
 		b.getJson(b.accrualGetRecUrl+r.Number, &resp)
