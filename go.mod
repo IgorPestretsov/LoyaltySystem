@@ -24,5 +24,6 @@ require (
 	github.com/lestrrat-go/option v1.0.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/theplant/luhn v0.0.0-20170224032821-81a1a381387a // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
