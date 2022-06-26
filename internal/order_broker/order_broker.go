@@ -76,6 +76,7 @@ func (b *Broker) GetStatusFromAccrual() {
 }
 func (b *Broker) getJson(url string, target interface{}) error {
 	r, err := b.client.Get(url)
+	fmt.Println(r)
 	if err != nil {
 		return err
 	}
