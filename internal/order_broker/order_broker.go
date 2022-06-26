@@ -70,7 +70,10 @@ func (b *Broker) GetStatusFromAccrual() {
 			continue
 		} else {
 			fmt.Println("here2")
-			b.s.ChangeStatusAndAcc(resp.Order, resp.Status, resp.Accrual)
+			err := b.s.ChangeStatusAndAcc(resp.Order, resp.Status, resp.Accrual)
+			if err != nil {
+				fmt.Println("update err:", err)
+			}
 		}
 
 	}
