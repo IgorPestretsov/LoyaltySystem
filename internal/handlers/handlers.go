@@ -105,11 +105,13 @@ func SaveOrder(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 		return
 	}
 }
+
 func GetAllUserOrders(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 	_, claims, _ := jwtauth.FromContext(r.Context())
 	w.Header().Add("Content-Type", "application/json")
 	userName := fmt.Sprintf("%v", claims["user_login"])
 	orders, err := s.GetUserOrders(userName)
+
 	if orders == nil {
 		w.WriteHeader(http.StatusNoContent)
 	}
