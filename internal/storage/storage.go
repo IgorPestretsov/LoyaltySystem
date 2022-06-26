@@ -24,7 +24,7 @@ type Storage interface {
 	GetUserOrders(user_login string) ([]Order, error)
 	GetRequiringToBeProcessed() ([]OrderForProcessing, error)
 	ChangeStatus(ui string, status string) error
-	ChangeStatusAndAcc(uid string, status string, accrual int32) error
+	ChangeStatusAndAcc(uid string, status string, accrual float32) error
 }
 
 const StatusProcessing = "PROCESSING"

@@ -174,7 +174,7 @@ func (s *SQLStorage) ChangeStatus(uid string, status string) error {
 	return nil
 }
 
-func (s *SQLStorage) ChangeStatusAndAcc(uid string, status string, accrual int32) error {
+func (s *SQLStorage) ChangeStatusAndAcc(uid string, status string, accrual float32) error {
 	_, err := s.db.Exec("update orders set status=$2, accrual=$3 where order_num=$1", uid, status, accrual)
 	if err != nil {
 		var errDBInteraction *storage.ErrDBInteraction
