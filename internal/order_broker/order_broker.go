@@ -45,7 +45,7 @@ func (b *Broker) getNewRecs() {
 			b.queue <- r
 			b.s.ChangeStatus(r.Number, storage.StatusProcessing)
 		}
-		time.Sleep(time.Second * 10)
+		time.Sleep(time.Second * 1)
 
 	}
 }
