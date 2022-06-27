@@ -2,7 +2,6 @@ package order_broker
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/IgorPestretsov/LoyaltySystem/internal/storage"
 	"net/http"
 	"time"
@@ -41,7 +40,6 @@ func (b *Broker) getNewRecs() {
 			panic(err)
 		}
 		for _, r := range output {
-			fmt.Println(r)
 			b.queue <- r
 			b.s.ChangeStatus(r.Number, storage.StatusProcessing)
 		}
@@ -54,37 +52,27 @@ func (b *Broker) GetStatusFromAccrual() {
 	var resp accResponse
 	for r := range b.queue {
 		resp = accResponse{}
-		fmt.Println("Proccessing ", r)
-		fmt.Println(b.accrualGetRecUrl + r.Number)
 		err := b.getJson(b.accrualGetRecUrl+r.Number, &resp)
 		if err != nil {
 			b.queue <- r
-			fmt.Println(err)
 			time.Sleep(time.Second)
 			continue
 		}
 		if (resp.Status != storage.StatusProcessed) && (resp.Status != storage.StatusInvalid) {
-			fmt.Println("Here")
 			b.queue <- r
 			time.Sleep(time.Second)
 			continue
 		} else {
-			fmt.Println("here2")
-			err := b.s.ChangeStatusAndAcc(resp.Order, resp.Status, resp.Accrual)
-			if err != nil {
-				fmt.Println("update err:", err)
-			}
+			_ = b.s.ChangeStatusAndAcc(resp.Order, resp.Status, resp.Accrual)
 		}
 
 	}
 }
 func (b *Broker) getJson(url string, target interface{}) error {
 	r, err := b.client.Get(url)
-	fmt.Println(r)
 	if err != nil {
 		return err
 	}
-	fmt.Println(r.Body)
 	defer r.Body.Close()
 	return json.NewDecoder(r.Body).Decode(target)
 }

@@ -20,11 +20,13 @@ type OrderForProcessing struct {
 type Storage interface {
 	SaveUser(user User) error
 	GetUserPassword(user User) (string, error)
-	SaveOrder(user string, order_num string) error
-	GetUserOrders(user_login string) ([]Order, error)
+	SaveOrder(user string, orderNum string) error
+	GetUserOrders(userLogin string) ([]Order, error)
 	GetRequiringToBeProcessed() ([]OrderForProcessing, error)
 	ChangeStatus(ui string, status string) error
 	ChangeStatusAndAcc(uid string, status string, accrual float32) error
+	GetBalance(uid string) (float32, float32, error)
+	Withdraw(uid string, orderNum string, sum float32) error
 }
 
 const StatusProcessing = "PROCESSING"

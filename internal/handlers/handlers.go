@@ -13,6 +13,16 @@ import (
 	"strconv"
 )
 
+type balance struct {
+	Current   float32 `json:"current"`
+	Withdrawn float32 `json:"withdrawn"`
+}
+
+type withdrawRequest struct {
+	Order string  `json:"order"`
+	Sum   float32 `json:"sum"`
+}
+
 func RegisterUser(w http.ResponseWriter, r *http.Request, s storage.Storage, tokenAuth *jwtauth.JWTAuth) {
 	user := storage.User{}
 	rawData, err := io.ReadAll(r.Body)
@@ -22,7 +32,6 @@ func RegisterUser(w http.ResponseWriter, r *http.Request, s storage.Storage, tok
 		fmt.Println(err)
 		return
 	}
-	fmt.Println(user)
 	err = s.SaveUser(user)
 	var errLogin *storage.ErrLoginExist
 	if errors.As(err, &errLogin) {
@@ -125,4 +134,52 @@ func GetAllUserOrders(w http.ResponseWriter, r *http.Request, s storage.Storage)
 	if err != nil {
 		return
 	}
+}
+func GetBalance(w http.ResponseWriter, r *http.Request, s storage.Storage) {
+	_, claims, _ := jwtauth.FromContext(r.Context())
+	w.Header().Add("Content-Type", "application/json")
+	userName := fmt.Sprintf("%v", claims["user_login"])
+	accruals, withdraws, err := s.GetBalance(userName)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Println(err)
+		return
+	}
+	b := balance{Current: accruals, Withdrawn: withdraws}
+	output, err := json.Marshal(b)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(output)
+	return
+}
+func Withdraw(w http.ResponseWriter, r *http.Request, s storage.Storage) {
+	request := withdrawRequest{}
+	rawData, err := io.ReadAll(r.Body)
+	err = json.Unmarshal(rawData, &request)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	orderNumInt, err := strconv.Atoi(request.Order)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if luhn.Valid(orderNumInt) == false {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		return
+	}
+	_, claims, _ := jwtauth.FromContext(r.Context())
+	w.Header().Add("Content-Type", "application/json")
+	userName := fmt.Sprintf("%v", claims["user_login"])
+	err = s.Withdraw(userName, request.Order, request.Sum)
+	var errNotEnough *storage.ErrNotEnoughPoints
+	if errors.As(err, &errNotEnough) {
+		w.WriteHeader(http.StatusPaymentRequired)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	return
 }

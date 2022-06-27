@@ -28,3 +28,8 @@ type ErrFormat struct {
 }
 
 func (e *ErrFormat) Error() string { return "wrong value format" }
+
+type ErrNotEnoughPoints struct {
+}
+
+func (e *ErrNotEnoughPoints) Error() string { return "database interaction error" }

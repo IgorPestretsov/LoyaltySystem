@@ -47,6 +47,16 @@ func (s *SQLStorage) createTables() error {
 		"uploaded_at timestamp with time zone NOT NULL DEFAULT NOW()," +
 		"uid VARCHAR(30))" +
 		";")
+
+	if err != nil {
+		panic(err)
+	}
+	_, err = s.db.Query("CREATE TABLE IF NOT EXISTS withdrawals (" +
+		"order_num BIGSERIAL PRIMARY KEY," +
+		"uid VARCHAR(30)," +
+		"withdrawn double precision DEFAULT 0, " +
+		"processed_at timestamp with time zone NOT NULL DEFAULT NOW())" +
+		";")
 	if err != nil {
 		panic(err)
 	}
@@ -79,7 +89,6 @@ func (s *SQLStorage) SaveOrder(user string, order_num string) error {
 	uid, _ := s.getUIDbyUserLogin(user)
 	_, err := s.db.Exec("insert into orders(order_num, uid) values ($1,$2);",
 		order_num, uid)
-	fmt.Println(err)
 	if errors.As(err, &pqErr) && pqErr.Code == pgerrcode.UniqueViolation {
 		uidThatLoaded, _ := s.getUIDbyOrderNum(order_num)
 		if uidThatLoaded == uid {
@@ -91,7 +100,6 @@ func (s *SQLStorage) SaveOrder(user string, order_num string) error {
 		}
 	}
 	if errors.As(err, &pqErr) && pqErr.Code == pgerrcode.InvalidTextRepresentation {
-		fmt.Println("here:", pqErr.Code)
 		var errFormat *storage.ErrFormat
 		return errFormat
 	}
@@ -119,7 +127,6 @@ func (s *SQLStorage) GetUserOrders(user_login string) ([]storage.Order, error) {
 	uid, _ := s.getUIDbyUserLogin(user_login)
 	q := "select order_num, status, accrual, uploaded_at  from orders where uid=$1"
 	rows, err := s.db.Query(q, uid)
-	fmt.Println(err)
 	if err != nil {
 		panic(err)
 	}
@@ -178,8 +185,58 @@ func (s *SQLStorage) ChangeStatusAndAcc(uid string, status string, accrual float
 	_, err := s.db.Exec("update orders set status=$2, accrual=$3 where order_num=$1", uid, status, accrual)
 	if err != nil {
 		var errDBInteraction *storage.ErrDBInteraction
-		fmt.Println(err)
 		return errDBInteraction
 	}
 	return nil
+}
+func (s *SQLStorage) GetBalance(userName string) (float32, float32, error) {
+	var accruals sql.NullFloat64
+	var withdraws sql.NullFloat64
+	uid, _ := s.getUIDbyUserLogin(userName)
+	err := s.db.QueryRow("select sum(accrual) from orders where uid=$1;", uid).Scan(&accruals)
+	if err != nil {
+		var errDBInteraction *storage.ErrDBInteraction
+		return 0, 0, errDBInteraction
+	}
+	if !accruals.Valid {
+		return 0, 0, nil
+	}
+
+	err = s.db.QueryRow("select sum(withdrawn) from withdrawals where uid=$1;", uid).Scan(&withdraws)
+	if err != nil {
+		var errDBInteraction *storage.ErrDBInteraction
+		fmt.Println(err)
+		return 0, 0, errDBInteraction
+
+	}
+	if !withdraws.Valid {
+		return float32(accruals.Float64), 0, nil
+	} else {
+		return float32(accruals.Float64 - withdraws.Float64), float32(withdraws.Float64), nil
+	}
+
+}
+
+func (s *SQLStorage) Withdraw(userLogin string, orderNum string, sum float32) error {
+	uid, _ := s.getUIDbyUserLogin(userLogin)
+
+	if !s.isEnoughPoints(userLogin, sum) {
+		var errNotEnoughPoints *storage.ErrNotEnoughPoints
+		return errNotEnoughPoints
+	}
+	_, err := s.db.Exec("insert into withdrawals(uid, withdrawn, orderNum) values ($1,$2,$3);", uid, sum, orderNum)
+	if err != nil {
+		var errDBInteraction *storage.ErrDBInteraction
+		return errDBInteraction
+	}
+	return nil
+}
+
+func (s *SQLStorage) isEnoughPoints(userLogin string, wantToSpent float32) bool {
+	balance, _, _ := s.GetBalance(userLogin)
+	if balance < wantToSpent {
+		return false
+	} else {
+		return true
+	}
 }
