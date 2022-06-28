@@ -182,3 +182,25 @@ func Withdraw(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 	w.WriteHeader(http.StatusOK)
 	return
 }
+func GeWithdrawals(w http.ResponseWriter, r *http.Request, s storage.Storage) {
+	_, claims, _ := jwtauth.FromContext(r.Context())
+	w.Header().Add("Content-Type", "application/json")
+	userName := fmt.Sprintf("%v", claims["user_login"])
+	witdrawals, err := s.GetWithdrawals(userName)
+	var errNotEnough *storage.ErrNotEnoughPoints
+	if errors.As(err, &errNotEnough) {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if witdrawals == nil {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	output, err := json.Marshal(witdrawals)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	_, err = w.Write(output)
+	return
+}

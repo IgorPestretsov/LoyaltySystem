@@ -17,6 +17,11 @@ type OrderForProcessing struct {
 	Status string
 }
 
+type Withdrawal struct {
+	Order       string  `json:"order"`
+	Sum         float32 `json:"sum"`
+	ProcessedAt string  `json:"processed_at"`
+}
 type Storage interface {
 	SaveUser(user User) error
 	GetUserPassword(user User) (string, error)
@@ -26,7 +31,8 @@ type Storage interface {
 	ChangeStatus(ui string, status string) error
 	ChangeStatusAndAcc(uid string, status string, accrual float32) error
 	GetBalance(uid string) (float32, float32, error)
-	Withdraw(uid string, orderNum string, sum float32) error
+	Withdraw(userLogin string, orderNum string, sum float32) error
+	GetWithdrawals(userLogin string) ([]Withdrawal, error)
 }
 
 const StatusProcessing = "PROCESSING"

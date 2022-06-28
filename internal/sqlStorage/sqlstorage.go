@@ -240,3 +240,28 @@ func (s *SQLStorage) isEnoughPoints(userLogin string, wantToSpent float32) bool 
 		return true
 	}
 }
+func (s *SQLStorage) GetWithdrawals(userLogin string) ([]storage.Withdrawal, error) {
+	uid, _ := s.getUIDbyUserLogin(userLogin)
+	q := "select order_num, withdrawn, processed_at from withdrawals where uid = $1"
+	rows, err := s.db.Query(q, uid)
+	if err != nil {
+		panic(err)
+	}
+	err = rows.Err()
+
+	if err != nil {
+		var errDBInteraction *storage.ErrDBInteraction
+		return nil, errDBInteraction
+	}
+	var withdrawals []storage.Withdrawal
+	for rows.Next() {
+		var withdrawal storage.Withdrawal
+		err := rows.Scan(&withdrawal.Order, &withdrawal.Sum, &withdrawal.ProcessedAt)
+		if err != nil {
+			panic(err)
+		}
+		withdrawals = append(withdrawals, withdrawal)
+	}
+
+	return withdrawals, nil
+}

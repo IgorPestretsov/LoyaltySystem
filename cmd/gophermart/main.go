@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"github.com/IgorPestretsov/LoyaltySystem/internal/handlers"
 	"github.com/IgorPestretsov/LoyaltySystem/internal/middlewares"
 	"github.com/IgorPestretsov/LoyaltySystem/internal/order_broker"
@@ -64,13 +63,12 @@ func router() http.Handler {
 		r.Get("/api/user/balance", func(rw http.ResponseWriter, r *http.Request) {
 			handlers.GetBalance(rw, r, s)
 		})
+		r.Get("/api/user/withdrawals", func(rw http.ResponseWriter, r *http.Request) {
+			handlers.GeWithdrawals(rw, r, s)
+		})
 
 		r.Post("/api/user/balance/withdraw", func(rw http.ResponseWriter, r *http.Request) {
 			handlers.Withdraw(rw, r, s)
-		})
-		r.Get("/test", func(w http.ResponseWriter, r *http.Request) {
-			_, claims, _ := jwtauth.FromContext(r.Context())
-			w.Write([]byte(fmt.Sprintf("protected area. hi %v", claims["user_id"])))
 		})
 	})
 	//Unprotected group
