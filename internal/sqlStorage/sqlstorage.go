@@ -224,7 +224,7 @@ func (s *SQLStorage) Withdraw(userLogin string, orderNum string, sum float32) er
 		var errNotEnoughPoints *storage.ErrNotEnoughPoints
 		return errNotEnoughPoints
 	}
-	_, err := s.db.Exec("insert into withdrawals(uid, withdrawn, orderNum) values ($1,$2,$3);", uid, sum, orderNum)
+	_, err := s.db.Exec("insert into withdrawals(uid, withdrawn, order_num) values ($1,$2,$3);", uid, sum, orderNum)
 	if err != nil {
 		var errDBInteraction *storage.ErrDBInteraction
 		return errDBInteraction
