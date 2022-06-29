@@ -1,4 +1,4 @@
-package sqlStorage
+package sqlstorage
 
 import (
 	"database/sql"
@@ -7,7 +7,6 @@ import (
 	"github.com/IgorPestretsov/LoyaltySystem/internal/storage"
 	"github.com/jackc/pgerrcode"
 	"github.com/lib/pq"
-	_ "github.com/lib/pq"
 )
 
 type SQLStorage struct {
@@ -63,9 +62,9 @@ func (s *SQLStorage) createTables() error {
 }
 
 func (s *SQLStorage) SaveUser(user storage.User) error {
-	hashedPass, err := app.HashPassword(user.Password)
+	hashedPass, _ := app.HashPassword(user.Password)
 	var pqErr *pq.Error
-	_, err = s.db.Exec("insert into users(login,password) values ($1,$2);",
+	_, err := s.db.Exec("insert into users(login,password) values ($1,$2);",
 		user.Login, hashedPass)
 	if errors.As(err, &pqErr) && pqErr.Code == pgerrcode.UniqueViolation {
 		var errLoginExist *storage.ErrLoginExist
@@ -83,13 +82,13 @@ func (s *SQLStorage) GetUserPassword(user storage.User) (string, error) {
 	_ = s.db.QueryRow("select password from users where login=$1", user.Login).Scan(&actualPasswordHash)
 	return actualPasswordHash, nil
 }
-func (s *SQLStorage) SaveOrder(user string, order_num string) error {
+func (s *SQLStorage) SaveOrder(user string, orderNum string) error {
 	var pqErr *pq.Error
 	uid, _ := s.getUIDbyUserLogin(user)
 	_, err := s.db.Exec("insert into orders(order_num, uid) values ($1,$2);",
-		order_num, uid)
+		orderNum, uid)
 	if errors.As(err, &pqErr) && pqErr.Code == pgerrcode.UniqueViolation {
-		uidThatLoaded, _ := s.getUIDbyOrderNum(order_num)
+		uidThatLoaded, _ := s.getUIDbyOrderNum(orderNum)
 		if uidThatLoaded == uid {
 			var errAlreadyLoadedByThisUser *storage.ErrAlreadyLoadedByThisUser
 			return errAlreadyLoadedByThisUser
@@ -109,10 +108,10 @@ func (s *SQLStorage) SaveOrder(user string, order_num string) error {
 	return nil
 
 }
-func (s *SQLStorage) getUIDbyUserLogin(user_login string) (string, error) {
+func (s *SQLStorage) getUIDbyUserLogin(userLogin string) (string, error) {
 
 	var uid string
-	err := s.db.QueryRow("select uid from users where login=$1;", user_login).Scan(&uid)
+	err := s.db.QueryRow("select uid from users where login=$1;", userLogin).Scan(&uid)
 	return uid, err
 }
 func (s *SQLStorage) getUIDbyOrderNum(orderNum string) (string, error) {
@@ -122,19 +121,19 @@ func (s *SQLStorage) getUIDbyOrderNum(orderNum string) (string, error) {
 	return uid, err
 }
 
-func (s *SQLStorage) GetUserOrders(user_login string) ([]storage.Order, error) {
-	uid, _ := s.getUIDbyUserLogin(user_login)
+func (s *SQLStorage) GetUserOrders(userLogin string) ([]storage.Order, error) {
+	uid, _ := s.getUIDbyUserLogin(userLogin)
 	q := "select order_num, status, accrual, uploaded_at  from orders where uid=$1"
 	rows, err := s.db.Query(q, uid)
 	if err != nil {
 		panic(err)
 	}
-	//err := rows.Err()
+	err = rows.Err()
 
-	//if err != nil {
-	//	var errDBInteraction *storage.ErrDBInteraction
-	//	return nil, errDBInteraction
-	//}
+	if err != nil {
+		var errDBInteraction *storage.ErrDBInteraction
+		return nil, errDBInteraction
+	}
 	var orders []storage.Order
 	for rows.Next() {
 		var order storage.Order
@@ -153,12 +152,12 @@ func (s *SQLStorage) GetRequiringToBeProcessed() ([]storage.OrderForProcessing, 
 	if err != nil {
 		panic(err)
 	}
-	//err := rows.Err()
+	err = rows.Err()
 
-	//if err != nil {
-	//	var errDBInteraction *storage.ErrDBInteraction
-	//	return nil, errDBInteraction
-	//}
+	if err != nil {
+		var errDBInteraction *storage.ErrDBInteraction
+		return nil, errDBInteraction
+	}
 	var orders []storage.OrderForProcessing
 	for rows.Next() {
 		var order storage.OrderForProcessing

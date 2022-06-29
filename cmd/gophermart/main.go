@@ -5,7 +5,7 @@ import (
 	"github.com/IgorPestretsov/LoyaltySystem/internal/handlers"
 	"github.com/IgorPestretsov/LoyaltySystem/internal/middlewares"
 	"github.com/IgorPestretsov/LoyaltySystem/internal/orderbroker"
-	"github.com/IgorPestretsov/LoyaltySystem/internal/sqlStorage"
+	"github.com/IgorPestretsov/LoyaltySystem/internal/sqlstorage"
 	"github.com/IgorPestretsov/LoyaltySystem/internal/storage"
 	"github.com/caarlos0/env/v6"
 	"github.com/go-chi/chi/v5"
@@ -34,7 +34,7 @@ func main() {
 		log.Fatal(err)
 	}
 	tokenAuth = jwtauth.New("HS256", []byte(cfg.TokenSecret), nil)
-	s = sqlStorage.NewSQLStorage(cfg.DatabaseURI)
+	s = sqlstorage.NewSQLStorage(cfg.DatabaseURI)
 	b := orderbroker.New(s, cfg.AccrualSystemAddress)
 	b.Start()
 	log.Fatal(http.ListenAndServe(cfg.RunAddress, router()))

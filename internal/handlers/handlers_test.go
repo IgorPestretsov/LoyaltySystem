@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"github.com/IgorPestretsov/LoyaltySystem/internal/sqlStorage"
+	"github.com/IgorPestretsov/LoyaltySystem/internal/sqlstorage"
 	"github.com/IgorPestretsov/LoyaltySystem/internal/storage"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
@@ -48,7 +48,7 @@ func TestRegisterUser(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := sqlStorage.NewSQLStorage("password=P@ssw0rd dbname=loyaltySystem sslmode=disable host=localhost port=5432 user=user ")
+			s := sqlstorage.NewSQLStorage("password=P@ssw0rd dbname=loyaltySystem sslmode=disable host=localhost port=5432 user=user ")
 			defer s.DropTableUsers()
 			s.SaveUser(storage.User{Login: "existed_user", Password: "pass"})
 			r := chi.NewRouter()
