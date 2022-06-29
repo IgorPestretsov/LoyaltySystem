@@ -144,7 +144,7 @@ func GetBalance(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 func Withdraw(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 	request := withdrawRequest{}
 	rawData, _ := io.ReadAll(r.Body)
-	err = json.Unmarshal(rawData, &request)
+	err := json.Unmarshal(rawData, &request)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
