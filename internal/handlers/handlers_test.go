@@ -4,6 +4,7 @@ import (
 	"github.com/IgorPestretsov/LoyaltySystem/internal/sqlstorage"
 	"github.com/IgorPestretsov/LoyaltySystem/internal/storage"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/jwtauth/v5"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -53,8 +54,9 @@ func TestRegisterUser(t *testing.T) {
 			s.SaveUser(storage.User{Login: "existed_user", Password: "pass"})
 			r := chi.NewRouter()
 
+			tokenAuth := jwtauth.New("HS256", "SuperSecret", nil)
 			r.Post(tt.request, func(rw http.ResponseWriter, r *http.Request) {
-				RegisterUser(rw, r, s)
+				RegisterUser(rw, r, s, tokenAuth)
 			})
 
 			req := httptest.NewRequest(http.MethodPost, tt.request, strings.NewReader(tt.creds))
