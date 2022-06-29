@@ -25,8 +25,8 @@ type withdrawRequest struct {
 
 func RegisterUser(w http.ResponseWriter, r *http.Request, s storage.Storage, tokenAuth *jwtauth.JWTAuth) {
 	user := storage.User{}
-	rawData, err := io.ReadAll(r.Body)
-	err = json.Unmarshal(rawData, &user)
+	rawData, _ := io.ReadAll(r.Body)
+	err := json.Unmarshal(rawData, &user)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -45,20 +45,19 @@ func RegisterUser(w http.ResponseWriter, r *http.Request, s storage.Storage, tok
 	cookie := http.Cookie{Name: "jwt", Value: tokenString}
 	http.SetCookie(w, &cookie)
 	w.WriteHeader(http.StatusOK)
-	return
 
 }
 func Login(w http.ResponseWriter, r *http.Request, s storage.Storage, tokenAuth *jwtauth.JWTAuth) {
 
 	user := storage.User{}
-	rawData, err := io.ReadAll(r.Body)
-	err = json.Unmarshal(rawData, &user)
+	rawData, _ := io.ReadAll(r.Body)
+	err := json.Unmarshal(rawData, &user)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	var actualPasswordHash string
-	actualPasswordHash, err = s.GetUserPassword(user)
+	actualPasswordHash, _ = s.GetUserPassword(user)
 	passIsOk := app.CheckPasswordHash(user.Password, actualPasswordHash)
 	if passIsOk {
 		tokenString := app.GetToken(user.Login, tokenAuth)
@@ -80,13 +79,13 @@ func SaveOrder(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	order_num := string(rawData)
-	order_num_int, _ := strconv.Atoi(order_num)
-	if luhn.Valid(order_num_int) == false {
+	orderNum := string(rawData)
+	orderNumInt, _ := strconv.Atoi(orderNum)
+	if !luhn.Valid(orderNumInt) {
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		return
 	}
-	err = s.SaveOrder(userName, order_num)
+	err = s.SaveOrder(userName, orderNum)
 
 	switch err.(type) {
 	default:
@@ -111,7 +110,7 @@ func GetAllUserOrders(w http.ResponseWriter, r *http.Request, s storage.Storage)
 	_, claims, _ := jwtauth.FromContext(r.Context())
 	w.Header().Add("Content-Type", "application/json")
 	userName := fmt.Sprintf("%v", claims["user_login"])
-	orders, err := s.GetUserOrders(userName)
+	orders, _ := s.GetUserOrders(userName)
 
 	if orders == nil {
 		w.WriteHeader(http.StatusNoContent)
@@ -141,7 +140,6 @@ func GetBalance(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(output)
-	return
 }
 func Withdraw(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 	request := withdrawRequest{}
@@ -157,7 +155,7 @@ func Withdraw(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 		return
 	}
 
-	if luhn.Valid(orderNumInt) == false {
+	if !luhn.Valid(orderNumInt) {
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		return
 	}
@@ -171,7 +169,6 @@ func Withdraw(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	return
 }
 func GeWithdrawals(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 	_, claims, _ := jwtauth.FromContext(r.Context())
@@ -193,5 +190,8 @@ func GeWithdrawals(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 		return
 	}
 	_, err = w.Write(output)
-	return
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }
