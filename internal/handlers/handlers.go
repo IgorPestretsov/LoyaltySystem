@@ -29,7 +29,6 @@ func RegisterUser(w http.ResponseWriter, r *http.Request, s storage.Storage, tok
 	err = json.Unmarshal(rawData, &user)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Println(err)
 		return
 	}
 	err = s.SaveUser(user)
@@ -39,7 +38,6 @@ func RegisterUser(w http.ResponseWriter, r *http.Request, s storage.Storage, tok
 
 	}
 	if err != nil {
-		fmt.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -54,26 +52,21 @@ func Login(w http.ResponseWriter, r *http.Request, s storage.Storage, tokenAuth 
 
 	user := storage.User{}
 	rawData, err := io.ReadAll(r.Body)
-	fmt.Println("user in login:", rawData)
 	err = json.Unmarshal(rawData, &user)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Println(err)
 		return
 	}
 	var actualPasswordHash string
 	actualPasswordHash, err = s.GetUserPassword(user)
-	fmt.Println(actualPasswordHash)
 	passIsOk := app.CheckPasswordHash(user.Password, actualPasswordHash)
 	if passIsOk {
-		fmt.Println("pass is ok")
 		tokenString := app.GetToken(user.Login, tokenAuth)
 		cookie := http.Cookie{Name: "jwt", Value: tokenString}
 		http.SetCookie(w, &cookie)
 		w.WriteHeader(http.StatusOK)
 		return
 	} else {
-		fmt.Println("wrong Password")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -85,7 +78,6 @@ func SaveOrder(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 	rawData, err := io.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Println(err)
 		return
 	}
 	order_num := string(rawData)
@@ -142,7 +134,6 @@ func GetBalance(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 	accruals, withdraws, err := s.GetBalance(userName)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Println(err)
 		return
 	}
 	b := balance{Current: accruals, Withdrawn: withdraws}

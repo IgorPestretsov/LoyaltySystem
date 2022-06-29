@@ -1,4 +1,4 @@
-package order_broker
+package orderBroker
 
 import (
 	"encoding/json"
@@ -15,15 +15,15 @@ type accResponse struct {
 type Broker struct {
 	s                storage.Storage
 	queue            chan storage.OrderForProcessing
-	accrualGetRecUrl string
+	accrualGetRecURL string
 	client           *http.Client
 }
 
 func New(s storage.Storage, accURL string) *Broker {
-	var b Broker = Broker{}
+	var b = Broker{}
 	b.s = s
 	b.queue = make(chan storage.OrderForProcessing, 20)
-	b.accrualGetRecUrl = accURL + "/api/orders/"
+	b.accrualGetRecURL = accURL + "/api/orders/"
 	b.client = &http.Client{Timeout: time.Second * 10}
 	return &b
 }
@@ -52,7 +52,7 @@ func (b *Broker) GetStatusFromAccrual() {
 	var resp accResponse
 	for r := range b.queue {
 		resp = accResponse{}
-		err := b.getJson(b.accrualGetRecUrl+r.Number, &resp)
+		err := b.getJSON(b.accrualGetRecURL+r.Number, &resp)
 		if err != nil {
 			b.queue <- r
 			time.Sleep(time.Second)
@@ -68,7 +68,7 @@ func (b *Broker) GetStatusFromAccrual() {
 
 	}
 }
-func (b *Broker) getJson(url string, target interface{}) error {
+func (b *Broker) getJSON(url string, target interface{}) error {
 	r, err := b.client.Get(url)
 	if err != nil {
 		return err

@@ -3,7 +3,6 @@ package sqlStorage
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"github.com/IgorPestretsov/LoyaltySystem/internal/app"
 	"github.com/IgorPestretsov/LoyaltySystem/internal/storage"
 	"github.com/jackc/pgerrcode"
@@ -205,7 +204,6 @@ func (s *SQLStorage) GetBalance(userName string) (float32, float32, error) {
 	err = s.db.QueryRow("select sum(withdrawn) from withdrawals where uid=$1;", uid).Scan(&withdraws)
 	if err != nil {
 		var errDBInteraction *storage.ErrDBInteraction
-		fmt.Println(err)
 		return 0, 0, errDBInteraction
 
 	}
