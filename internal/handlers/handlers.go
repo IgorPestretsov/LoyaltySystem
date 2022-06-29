@@ -136,14 +136,14 @@ func GetBalance(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 		return
 	}
 	b := balance{Current: accruals, Withdrawn: withdraws}
-	output, err := json.Marshal(b)
+	output, _ := json.Marshal(b)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(output)
 }
 func Withdraw(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 	request := withdrawRequest{}
-	rawData, err := io.ReadAll(r.Body)
+	rawData, _ := io.ReadAll(r.Body)
 	err = json.Unmarshal(rawData, &request)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
