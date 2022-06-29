@@ -1,4 +1,4 @@
-package orderBroker
+package orderbroker
 
 import (
 	"encoding/json"

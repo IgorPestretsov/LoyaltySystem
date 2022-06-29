@@ -30,7 +30,7 @@ func NewSQLStorage(dsn string) *SQLStorage {
 }
 
 func (s *SQLStorage) createTables() error {
-	_, err := s.db.Query("CREATE TABLE IF NOT EXISTS users (" +
+	_, err := s.db.Exec("CREATE TABLE IF NOT EXISTS users (" +
 		"uid SERIAL PRIMARY KEY," +
 		"login VARCHAR(30) UNIQUE, " +
 		"password VARCHAR(100))" +
@@ -39,7 +39,7 @@ func (s *SQLStorage) createTables() error {
 		panic(err)
 	}
 
-	_, err = s.db.Query("CREATE TABLE IF NOT EXISTS orders (" +
+	_, err = s.db.Exec("CREATE TABLE IF NOT EXISTS orders (" +
 		"order_num BIGSERIAL PRIMARY KEY," +
 		"status VARCHAR(30) DEFAULT 'NEW'," +
 		"accrual double precision DEFAULT 0," +
@@ -50,7 +50,7 @@ func (s *SQLStorage) createTables() error {
 	if err != nil {
 		panic(err)
 	}
-	_, err = s.db.Query("CREATE TABLE IF NOT EXISTS withdrawals (" +
+	_, err = s.db.Exec("CREATE TABLE IF NOT EXISTS withdrawals (" +
 		"order_num BIGSERIAL PRIMARY KEY," +
 		"uid VARCHAR(30)," +
 		"withdrawn double precision DEFAULT 0, " +
