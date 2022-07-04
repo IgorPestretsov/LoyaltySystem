@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/theplant/luhn"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 )
@@ -72,6 +73,12 @@ func Login(w http.ResponseWriter, r *http.Request, s storage.Storage, tokenAuth 
 
 }
 func SaveOrder(w http.ResponseWriter, r *http.Request, s storage.Storage) {
+	b, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("save order %s", b)
 	_, claims, _ := jwtauth.FromContext(r.Context())
 	userName := fmt.Sprintf("%v", claims["user_login"])
 	rawData, err := io.ReadAll(r.Body)
@@ -142,9 +149,15 @@ func GetBalance(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 	w.Write(output)
 }
 func Withdraw(w http.ResponseWriter, r *http.Request, s storage.Storage) {
+	b, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("withdraw %s", b)
 	request := withdrawRequest{}
 	rawData, _ := io.ReadAll(r.Body)
-	err := json.Unmarshal(rawData, &request)
+	err = json.Unmarshal(rawData, &request)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
