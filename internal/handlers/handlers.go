@@ -73,12 +73,6 @@ func Login(w http.ResponseWriter, r *http.Request, s storage.Storage, tokenAuth 
 
 }
 func SaveOrder(w http.ResponseWriter, r *http.Request, s storage.Storage) {
-	b, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Printf("save order %s", b)
 	_, claims, _ := jwtauth.FromContext(r.Context())
 	userName := fmt.Sprintf("%v", claims["user_login"])
 	rawData, err := io.ReadAll(r.Body)
