@@ -7,6 +7,7 @@ import (
 	"github.com/IgorPestretsov/LoyaltySystem/internal/storage"
 	"github.com/jackc/pgerrcode"
 	"github.com/lib/pq"
+	"log"
 )
 
 type SQLStorage struct {
@@ -19,11 +20,11 @@ func NewSQLStorage(dsn string) *SQLStorage {
 	s.db, err = sql.Open("postgres", dsn)
 
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	err = s.createTables()
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	return &s
 }
@@ -35,7 +36,7 @@ func (s *SQLStorage) createTables() error {
 		"password VARCHAR(100))" +
 		";")
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	_, err = s.db.Exec("CREATE TABLE IF NOT EXISTS orders (" +
@@ -47,7 +48,7 @@ func (s *SQLStorage) createTables() error {
 		";")
 
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	_, err = s.db.Exec("CREATE TABLE IF NOT EXISTS withdrawals (" +
 		"order_num BIGSERIAL PRIMARY KEY," +
@@ -56,7 +57,7 @@ func (s *SQLStorage) createTables() error {
 		"processed_at timestamp with time zone NOT NULL DEFAULT NOW())" +
 		";")
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	return nil
 }
@@ -126,22 +127,25 @@ func (s *SQLStorage) GetUserOrders(userLogin string) ([]storage.Order, error) {
 	q := "select order_num, status, accrual, uploaded_at  from orders where uid=$1"
 	rows, err := s.db.Query(q, uid)
 	if err != nil {
-		panic(err)
+		var errDBInteraction *storage.ErrDBInteraction
+		return nil, errDBInteraction
+	}
+	var orders []storage.Order
+	defer rows.Close()
+	for rows.Next() {
+		var order storage.Order
+		err := rows.Scan(&order.Number, &order.Status, &order.Accrual, &order.UploadedAt)
+		if err != nil {
+			var errDBInteraction *storage.ErrDBInteraction
+			return nil, errDBInteraction
+		}
+		orders = append(orders, order)
 	}
 	err = rows.Err()
 
 	if err != nil {
 		var errDBInteraction *storage.ErrDBInteraction
 		return nil, errDBInteraction
-	}
-	var orders []storage.Order
-	for rows.Next() {
-		var order storage.Order
-		err := rows.Scan(&order.Number, &order.Status, &order.Accrual, &order.UploadedAt)
-		if err != nil {
-			panic(err)
-		}
-		orders = append(orders, order)
 	}
 	return orders, nil
 }
@@ -150,7 +154,8 @@ func (s *SQLStorage) GetRequiringToBeProcessed() ([]storage.OrderForProcessing, 
 	q := "select order_num, status from orders where status = 'NEW'"
 	rows, err := s.db.Query(q)
 	if err != nil {
-		panic(err)
+		var errDBInteraction *storage.ErrDBInteraction
+		return nil, errDBInteraction
 	}
 	err = rows.Err()
 
@@ -163,7 +168,8 @@ func (s *SQLStorage) GetRequiringToBeProcessed() ([]storage.OrderForProcessing, 
 		var order storage.OrderForProcessing
 		err := rows.Scan(&order.Number, &order.Status)
 		if err != nil {
-			panic(err)
+			var errDBInteraction *storage.ErrDBInteraction
+			return nil, errDBInteraction
 		}
 		orders = append(orders, order)
 	}
@@ -242,7 +248,8 @@ func (s *SQLStorage) GetWithdrawals(userLogin string) ([]storage.Withdrawal, err
 	q := "select order_num, withdrawn, processed_at from withdrawals where uid = $1"
 	rows, err := s.db.Query(q, uid)
 	if err != nil {
-		panic(err)
+		var errDBInteraction *storage.ErrDBInteraction
+		return nil, errDBInteraction
 	}
 	err = rows.Err()
 
@@ -255,7 +262,8 @@ func (s *SQLStorage) GetWithdrawals(userLogin string) ([]storage.Withdrawal, err
 		var withdrawal storage.Withdrawal
 		err := rows.Scan(&withdrawal.Order, &withdrawal.Sum, &withdrawal.ProcessedAt)
 		if err != nil {
-			panic(err)
+			var errDBInteraction *storage.ErrDBInteraction
+			return nil, errDBInteraction
 		}
 		withdrawals = append(withdrawals, withdrawal)
 	}

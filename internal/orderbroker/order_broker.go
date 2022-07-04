@@ -3,6 +3,7 @@ package orderbroker
 import (
 	"encoding/json"
 	"github.com/IgorPestretsov/LoyaltySystem/internal/storage"
+	"log"
 	"net/http"
 	"time"
 )
@@ -34,10 +35,15 @@ func (b *Broker) Start() {
 
 }
 func (b *Broker) getNewRecs() {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Println("Recovered in getNewRecs", r)
+		}
+	}()
 	for {
 		output, err := b.s.GetRequiringToBeProcessed()
 		if err != nil {
-			panic(err)
+			log.Println("Broker err: DB interaction error")
 		}
 		for _, r := range output {
 			b.queue <- r
@@ -49,6 +55,11 @@ func (b *Broker) getNewRecs() {
 }
 
 func (b *Broker) GetStatusFromAccrual() {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Println("Recovered in GetStatusFromAccrual", r)
+		}
+	}()
 	var resp accResponse
 	for r := range b.queue {
 		resp = accResponse{}
