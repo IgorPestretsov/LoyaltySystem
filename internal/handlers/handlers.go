@@ -9,7 +9,6 @@ import (
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/theplant/luhn"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 )
@@ -143,15 +142,11 @@ func GetBalance(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 	w.Write(output)
 }
 func Withdraw(w http.ResponseWriter, r *http.Request, s storage.Storage) {
-	b, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		panic(err)
-	}
 
-	fmt.Printf("withdraw %s", b)
 	request := withdrawRequest{}
 	rawData, _ := io.ReadAll(r.Body)
-	err = json.Unmarshal(rawData, &request)
+	fmt.Printf("withdraw %s", rawData)
+	err := json.Unmarshal(rawData, &request)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
