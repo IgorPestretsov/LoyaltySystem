@@ -145,7 +145,6 @@ func Withdraw(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 
 	request := withdrawRequest{}
 	rawData, _ := io.ReadAll(r.Body)
-	fmt.Printf("withdraw %s", rawData)
 	err := json.Unmarshal(rawData, &request)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
