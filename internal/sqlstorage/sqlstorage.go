@@ -157,12 +157,6 @@ func (s *SQLStorage) GetRequiringToBeProcessed() ([]storage.OrderForProcessing, 
 		var errDBInteraction *storage.ErrDBInteraction
 		return nil, errDBInteraction
 	}
-	err = rows.Err()
-
-	if err != nil {
-		var errDBInteraction *storage.ErrDBInteraction
-		return nil, errDBInteraction
-	}
 	var orders []storage.OrderForProcessing
 	for rows.Next() {
 		var order storage.OrderForProcessing
@@ -172,6 +166,12 @@ func (s *SQLStorage) GetRequiringToBeProcessed() ([]storage.OrderForProcessing, 
 			return nil, errDBInteraction
 		}
 		orders = append(orders, order)
+	}
+	err = rows.Err()
+
+	if err != nil {
+		var errDBInteraction *storage.ErrDBInteraction
+		return nil, errDBInteraction
 	}
 	return orders, nil
 
@@ -251,12 +251,6 @@ func (s *SQLStorage) GetWithdrawals(userLogin string) ([]storage.Withdrawal, err
 		var errDBInteraction *storage.ErrDBInteraction
 		return nil, errDBInteraction
 	}
-	err = rows.Err()
-
-	if err != nil {
-		var errDBInteraction *storage.ErrDBInteraction
-		return nil, errDBInteraction
-	}
 	var withdrawals []storage.Withdrawal
 	for rows.Next() {
 		var withdrawal storage.Withdrawal
@@ -266,6 +260,12 @@ func (s *SQLStorage) GetWithdrawals(userLogin string) ([]storage.Withdrawal, err
 			return nil, errDBInteraction
 		}
 		withdrawals = append(withdrawals, withdrawal)
+	}
+	err = rows.Err()
+
+	if err != nil {
+		var errDBInteraction *storage.ErrDBInteraction
+		return nil, errDBInteraction
 	}
 
 	return withdrawals, nil
